@@ -21,6 +21,7 @@ Usage:
 """
 import argparse
 import base64
+import contextlib
 import os
 import re
 import shutil
@@ -127,13 +128,42 @@ def _inkscape(svg_file, png, w, h):
                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+@contextlib.contextmanager
+def _tempdir():
+    """Like tempfile.TemporaryDirectory, but cleanup never raises (Windows can keep Chrome's files locked)."""
+    path = tempfile.mkdtemp()
+    try:
+        yield path
+    finally:
+        for _ in range(10):
+            shutil.rmtree(path, ignore_errors=True)
+            if not os.path.exists(path):
+                break
+            time.sleep(0.3)
+
+
+def _stop(proc):
+    """Stop a browser process and its children (Chrome keeps helper processes alive on Windows)."""
+    if proc.poll() is not None:
+        return
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+    else:
+        proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
 def _chrome(svg_file, png, w, h):
     with open(svg_file, "rb") as fh:
         data = base64.b64encode(fh.read()).decode("ascii")
     page = (f"<!doctype html><html><head><style>html,body{{margin:0;padding:0;background:transparent;width:{w}px;"
             f"height:{h}px;overflow:hidden}}img{{display:block;width:{w}px;height:{h}px}}</style></head>"
             f"<body><img src='data:image/svg+xml;base64,{data}'></body></html>")
-    with tempfile.TemporaryDirectory() as tmp:
+    with _tempdir() as tmp:
         html_path = os.path.join(tmp, "render.html")
         with open(html_path, "w", encoding="utf-8") as fh:
             fh.write(page)
@@ -146,7 +176,7 @@ def screenshot_html(html_path, png, w, h):
     if not chrome:
         raise RuntimeError("no Chromium-based browser found for HTML screenshots")
     html_path = os.path.abspath(html_path)
-    with tempfile.TemporaryDirectory() as tmp:
+    with _tempdir() as tmp:
         shot = os.path.join(tmp, "shot.png")  # never poll the destination: an older file may already exist there
         cmd = [chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
                "--no-default-browser-check", "--use-mock-keychain", "--password-store=basic", "--disable-extensions",
@@ -164,12 +194,11 @@ def screenshot_html(html_path, png, w, h):
             if proc.poll() is not None and os.path.exists(shot):
                 break
             time.sleep(0.25)
-        if proc.poll() is None:
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+        try:
+            proc.wait(timeout=10)  # Chrome exits by itself after --screenshot; give it a moment
+        except subprocess.TimeoutExpired:
+            pass
+        _stop(proc)
         if not os.path.exists(shot):
             raise RuntimeError("chrome produced no file")
         shutil.move(shot, png)
@@ -237,18 +266,18 @@ def render(svg_path, png_path, width, height, padding=0.0, bg=None, backend=None
     """Render svg_path into png_path at exactly width×height. Returns the backend used, or None."""
     markup = wrap_svg(svg_path, width, height, padding, bg)
     order = [backend] if backend else available_backends()
-    with tempfile.TemporaryDirectory() as tmp:
+    with _tempdir() as tmp:
         wrapped = os.path.join(tmp, "wrapped.svg")
         with open(wrapped, "w", encoding="utf-8") as fh:
             fh.write(markup)
         for name in order:
-            try:
-                BACKENDS[name](wrapped, png_path, width, height)
-                if os.path.exists(png_path):
-                    return name
-            except Exception as exc:  # try the next backend
-                last = exc  # noqa: F841
-                continue
+            for _attempt in range(2 if name == "chrome" else 1):  # a browser can fail once on a busy machine
+                try:
+                    BACKENDS[name](wrapped, png_path, width, height)
+                    if os.path.exists(png_path):
+                        return name
+                except Exception:  # retry, then try the next backend
+                    continue
     return None
 
 
@@ -296,7 +325,7 @@ def main():
 
     if a.ico:
         pngs = []
-        with tempfile.TemporaryDirectory() as tmp:
+        with _tempdir() as tmp:
             for s in a.ico_sizes:
                 p = os.path.join(tmp, f"ico-{s}.png")
                 if not render(a.files[0], p, s, s, a.padding, a.bg, a.backend):

@@ -199,7 +199,7 @@ def main():
                     raster.append(dst)
                 else:
                     ok = False
-                    print("web icons skipped: no rendering backend (see: python3 scripts/render_png.py --which)")
+                    print(f"web icons skipped: could not render {fname} (see: python3 scripts/render_png.py --which)")
                     break
             if ok:
                 ico = os.path.join(out_dir, "favicon.ico")
