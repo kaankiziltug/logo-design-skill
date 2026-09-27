@@ -1,5 +1,7 @@
 # Logo Design Skill for Claude & AI Agents
 
+[![Tests](https://github.com/kaankiziltug/logo-design-skill/actions/workflows/test.yml/badge.svg)](https://github.com/kaankiziltug/logo-design-skill/actions/workflows/test.yml)
+
 ![Eighteen example runs of the logo-design skill](docs/images/hero.png)
 
 A comprehensive **logo-design skill** that turns Claude — or any agent that supports Agent Skills, such as Gemini
