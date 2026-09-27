@@ -38,6 +38,7 @@ describe what the kit would contain.
 All scripts are dependency-free Python 3 and live in this skill's `scripts/` folder (in Claude Code:
 `${CLAUDE_SKILL_DIR}/scripts/`). Run them with `python3` and the full path, e.g.
 `python3 <skill-dir>/scripts/svg_audit.py logo.svg` (examples below write `scripts/…` for brevity).
+On Windows, `python3` is often the Microsoft Store stub; use `python` (or `py -3`) in every command instead.
 
 | Script | Use it to |
 |---|---|

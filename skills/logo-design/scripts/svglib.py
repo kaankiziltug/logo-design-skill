@@ -8,7 +8,18 @@ import colorsys
 import math
 import os
 import re
+import sys
 import xml.etree.ElementTree as ET
+
+
+def _use_utf8_console():
+    # Windows consoles default to cp1252, which cannot print the reports' arrows and symbols.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
+_use_utf8_console()
 
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIBRARY_DIR = os.path.join(SKILL_DIR, "assets", "library")
