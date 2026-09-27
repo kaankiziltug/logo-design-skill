@@ -195,7 +195,7 @@ def screenshot_html(html_path, png, w, h):
                 break
             time.sleep(0.25)
         try:
-            proc.wait(timeout=10)  # Chrome exits by itself after --screenshot; give it a moment
+            proc.wait(timeout=0.5)  # it may exit by itself after --screenshot; otherwise stop the whole tree
         except subprocess.TimeoutExpired:
             pass
         _stop(proc)
