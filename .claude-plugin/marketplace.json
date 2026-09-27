@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "A comprehensive logo-design skill for Claude: principles, process, SVG craft, testing tools and a 1,400+ logo reference library.",
-    "version": "1.4.1"
+    "version": "1.4.2"
   },
   "plugins": [
     {
       "name": "logo-design",
       "source": "./",
       "description": "Design, critique and deliver professional logos: brief, concepts, geometric SVG construction, optical refinement, colour, typography, testing, presentation and brand guidelines — with a searchable library of 1,400+ classified SVG logos.",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "category": "design",
       "keywords": ["logo", "branding", "identity", "svg", "design", "wordmark", "icon"]
     }

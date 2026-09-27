@@ -35,8 +35,9 @@ describe what the kit would contain.
 
 ## Tools in this skill
 
-All scripts are dependency-free Python 3 and live in this skill's `scripts/` folder (in Claude Code:
-`${CLAUDE_SKILL_DIR}/scripts/`). Run them with `python3` and the full path, e.g.
+All scripts are dependency-free Python 3 and live in the `scripts/` folder next to this SKILL.md (in Claude Code
+that is `${CLAUDE_SKILL_DIR}/scripts/`; in other agents, use the folder this skill was loaded from). Run them with
+`python3` and the full path, e.g.
 `python3 <skill-dir>/scripts/svg_audit.py logo.svg` (examples below write `scripts/…` for brevity).
 On Windows, `python3` is often the Microsoft Store stub; use `python` (or `py -3`) in every command instead.
 
@@ -52,7 +53,8 @@ On Windows, `python3` is often the Microsoft Store stub; use `python` (or `py -3
 | `build_catalog.py` | Maintainers only: rebuild the library catalog |
 
 **Look at your work.** Drawing in SVG code is drawing blind. After writing or changing a logo, render it and look:
-`python3 scripts/render_png.py concept-a.svg concept-b.svg --out-dir renders --size 512`, then view the PNGs (it
+`python3 scripts/render_png.py concept-a.svg concept-b.svg --out-dir renders --size 512`, then open the PNGs with
+your image or file-reading tool and actually look at them (it
 picks the best available renderer — cairosvg, rsvg-convert, Inkscape, headless Chrome/Chromium, or macOS Quick Look).
 Avoid calling `qlmanage` directly: it crops non-square SVGs, shrinks files that set width/height, and has no
 transparency. The HTML sheets can also be opened in a browser tool. If you truly cannot render, say so and keep the
