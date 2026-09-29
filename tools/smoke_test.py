@@ -103,7 +103,7 @@ def main():
         run("preview_sheet", [S("preview_sheet.py"), sym, lock, "--refs-industry", "finance-banking",
                               "-o", os.path.join(tmp, "preview.html")], [os.path.join(tmp, "preview.html")])
         run("presentation_board --list-mockups", [S("presentation_board.py"), "--list-mockups"], ["payment-card"])
-        spec = {"brand": "Smoke", "tagline": "Test", "brief": "A test brief.", "adjectives": ["calm"],
+        spec = {"brand": "Smoke & Café", "tagline": "Test", "brief": "A test brief.", "adjectives": ["calm"],
                 "industry": "finance", "brand_color": "#0F7C80", "final": True, "greyscale": False,
                 "concepts": [{"name": "Test", "symbol": sym, "lockup": lock, "idea": "An idea.",
                               "rationale": ["One", "Two"]}]}
@@ -112,6 +112,11 @@ def main():
             json.dump(spec, fh)
         run("presentation_board", [S("presentation_board.py"), spec_path, "-o", os.path.join(tmp, "board.html")],
             [os.path.join(tmp, "board.html")])
+        board = open(os.path.join(tmp, "board.html"), encoding="utf-8").read()
+        ok = "@smokecafe" in board and "alex@smokecafe.com" in board
+        print(f"[{'ok  ' if ok else 'FAIL'}] presentation_board handles strip punctuation and accents")
+        if not ok:
+            failures.append("presentation_board handles")
         run("export_variants (SVG)", [S("export_variants.py"), sym, "--out-dir", os.path.join(tmp, "export"),
                                       "--mono", "#0F7C80", "--icon-bg", "#0F7C80"])
         which = run("render_png --which", [S("render_png.py"), "--which"])
