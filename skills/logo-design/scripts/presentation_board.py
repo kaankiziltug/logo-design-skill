@@ -37,7 +37,9 @@ import datetime
 import html
 import json
 import os
+import re
 import sys
+import unicodedata
 
 sys.dont_write_bytecode = True  # keep the skill folder clean (no __pycache__)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -178,7 +180,8 @@ def mock_html(kind, c):
     lkd, wlk = (c["lock_dark"], "") if c.get("lock_dark") else (lock, "w")
     skd, wsk = ((c.get("stack_dark") or c["lock_dark"]), "") if (c.get("stack_dark") or c.get("lock_dark")) else (stack, "w")
     tile = c["tile"]
-    handle = html.escape(name.lower().replace(" ", ""))
+    # e-mail / social handle / domain: plain ASCII letters and digits ("Marlow & Finch" -> "marlowfinch")
+    handle = re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower())
     n = html.escape(name)
     if kind == "business-card":
         return (f'<div class="m" style="background:#d9d4cb"><div class="bc"><img class="{cls}" src="{lock}" style="max-height:34px;max-width:170px">'
