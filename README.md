@@ -19,8 +19,8 @@ production-ready SVG files and brand guidelines.
   presentation boards with industry-specific mockups, render PNGs, and export a complete favicon / app-icon /
   web-manifest set.
 
-**Contents:** [How it works](#how-it-works) · [Examples](#examples) · [Tests](#what-the-tests-catch) ·
-[Install](#install) · [Use](#use) · [What's inside](#whats-inside) · [Library](#library-at-a-glance)
+**Contents:** [How it works](#how-it-works) · [Install](#install) · [Examples](#examples) ·
+[Tests](#what-the-tests-catch) · [Use](#use) · [What's inside](#whats-inside) · [Library](#library-at-a-glance)
 
 ---
 
@@ -39,6 +39,51 @@ flowchart LR
 The skill always **stops at the checkpoint**: it shows the concepts as one overview image with a recommendation and
 offers the full kit. Nothing else is produced until you choose a direction — the kit is most of the work and only
 makes sense for an approved idea.
+
+---
+
+## Install
+
+### Claude Code — plugin marketplace (recommended)
+```
+/plugin marketplace add kaankiziltug/logo-design-skill
+/plugin install logo-design@logo-design-skill
+```
+
+### Claude Code — manual
+Copy the skill folder into your personal (all projects) or project skills directory:
+```bash
+git clone https://github.com/kaankiziltug/logo-design-skill.git
+cp -r logo-design-skill/skills/logo-design ~/.claude/skills/logo-design          # personal
+# or: cp -r logo-design-skill/skills/logo-design .claude/skills/logo-design     # per project
+```
+
+### Claude.ai / Claude Desktop
+Download `logo-design.zip` from the [Releases](https://github.com/kaankiziltug/logo-design-skill/releases) page (or run
+`python3 tools/package_skill.py`) and upload it under **Settings → Capabilities → Skills**. If your upload has a size
+limit, use `logo-design-lite.zip` (everything except the SVG files themselves).
+
+### Gemini CLI, Codex CLI and other agents
+The skill uses the open **Agent Skills** format (a folder with a `SKILL.md`), so it works in any agent that supports
+skills — the instructions are plain Markdown and the tools are plain Python. Clone once, then copy the folder into
+your agent's skills directory:
+```bash
+git clone https://github.com/kaankiziltug/logo-design-skill.git
+```
+
+| Agent | Personal (all projects) | Per project |
+|---|---|---|
+| Gemini CLI | `~/.gemini/skills/logo-design` (or `~/.agents/skills/`) | `.gemini/skills/logo-design` |
+| Codex CLI | `~/.codex/skills/logo-design` | `.codex/skills/logo-design` |
+| Cursor, GitHub Copilot, OpenCode, others | see your agent's skills docs | usually a `skills/` folder in the project |
+
+```bash
+cp -r logo-design-skill/skills/logo-design ~/.gemini/skills/logo-design     # Gemini CLI
+cp -r logo-design-skill/skills/logo-design ~/.codex/skills/logo-design      # Codex CLI
+```
+Start a new session and ask for a logo; the agent picks the skill up from its description. The skill works best with
+a model that can view images, because it renders its own drafts to PNG and checks them before showing you anything.
+The `.claude-plugin/` folder is only used by Claude Code and is ignored elsewhere.
 
 ---
 
@@ -369,49 +414,6 @@ production-readiness score: 76/100
 ```
 
 ---
-
-## Install
-
-### Claude Code — plugin marketplace (recommended)
-```
-/plugin marketplace add kaankiziltug/logo-design-skill
-/plugin install logo-design@logo-design-skill
-```
-
-### Claude Code — manual
-Copy the skill folder into your personal (all projects) or project skills directory:
-```bash
-git clone https://github.com/kaankiziltug/logo-design-skill.git
-cp -r logo-design-skill/skills/logo-design ~/.claude/skills/logo-design          # personal
-# or: cp -r logo-design-skill/skills/logo-design .claude/skills/logo-design     # per project
-```
-
-### Claude.ai / Claude Desktop
-Download `logo-design.zip` from the [Releases](https://github.com/kaankiziltug/logo-design-skill/releases) page (or run
-`python3 tools/package_skill.py`) and upload it under **Settings → Capabilities → Skills**. If your upload has a size
-limit, use `logo-design-lite.zip` (everything except the SVG files themselves).
-
-### Gemini CLI, Codex CLI and other agents
-The skill uses the open **Agent Skills** format (a folder with a `SKILL.md`), so it works in any agent that supports
-skills — the instructions are plain Markdown and the tools are plain Python. Clone once, then copy the folder into
-your agent's skills directory:
-```bash
-git clone https://github.com/kaankiziltug/logo-design-skill.git
-```
-
-| Agent | Personal (all projects) | Per project |
-|---|---|---|
-| Gemini CLI | `~/.gemini/skills/logo-design` (or `~/.agents/skills/`) | `.gemini/skills/logo-design` |
-| Codex CLI | `~/.codex/skills/logo-design` | `.codex/skills/logo-design` |
-| Cursor, GitHub Copilot, OpenCode, others | see your agent's skills docs | usually a `skills/` folder in the project |
-
-```bash
-cp -r logo-design-skill/skills/logo-design ~/.gemini/skills/logo-design     # Gemini CLI
-cp -r logo-design-skill/skills/logo-design ~/.codex/skills/logo-design      # Codex CLI
-```
-Start a new session and ask for a logo; the agent picks the skill up from its description. The skill works best with
-a model that can view images, because it renders its own drafts to PNG and checks them before showing you anything.
-The `.claude-plugin/` folder is only used by Claude Code and is ignored elsewhere.
 
 ## Use
 
