@@ -56,34 +56,34 @@ for.
 
 | Brand | Sector | Style | Chosen mark |
 |---|---|---|---|
-| [Kiln](#kiln--specialty-coffee-roaster) | Specialty coffee | Warm, crafted, modern | Letterform + custom wordmark |
-| [Zestly](#zestly--food-delivery-app) | Food delivery | Juicy, cheeky, tomato & lime | Mascot |
-| [Maison Orvelle](#maison-orvelle--luxury-fashion-atelier) | Luxury fashion | High-contrast Didone | Monogram |
-| [Pulsewave](#pulsewave--music--arts-festival) | Music festival | Neon on night, kinetic | Abstract letterform |
-| [Tinkertrail](#tinkertrail--kids-stem-workshops) | Kids' STEM education | Playful, rounded, multi-colour | Letterform |
-| [Ralli](#ralli--padel--tennis-app) | Sports app | Dynamic italic, electric coral | Letterform |
-| [Alderpeak](#alderpeak--outdoor-gear) | Outdoor gear | Rugged, slab, earthy | Pictorial symbol |
-| [Driftwell](#driftwell--surf-hostel--café) | Hospitality | Azulejo tile, coastal brights | Emblem + symbol |
-| [Calmera](#calmera--physiotherapy-clinic) | Physiotherapy | Soft, organic, calm | Pictorial symbol |
-| [Bramble Vet](#bramble-vet--veterinary-clinic) | Veterinary | Friendly character, sunny | Mascot |
-| [Voltra](#voltra--solar-energy) | Clean energy | Geometric, volt orange | Abstract symbol |
-| [Keyfort](#keyfort--password-manager) | Security SaaS | Strict grid, electric indigo & mint | Abstract symbol |
-| [Relaydesk](#relaydesk--customer-support-saas) | Support SaaS | Rounded, violet & coral | Abstract symbol |
-| [Tracelane](#tracelane--product-analytics) | Developer analytics | Technical, acid & pink on carbon | Letterform |
-| [Tallybook](#tallybook--invoicing--bookkeeping) | Small-business finance | Friendly, tangerine & teal | Letterform |
-| [Northvault](#northvault--digital-bank-for-freelancers) | Digital banking | Bold tile, hot magenta | Letterform |
-| [Mediora](#mediora--telehealth-app) | Telehealth | Soft, coral face on teal | Mascot |
-| [Brightdose](#brightdose--online-pharmacy) | Online pharmacy | Sunny yellow & cobalt | Letterform |
-| [Hearsay](#hearsay--podcast-network) | Podcast network | Bold pink, conversational | Letterform (client's pick) |
-| [Norrvik](#norrvik--architecture-studio) | Architecture | Restrained, spruce green | Abstract symbol |
-| [Brawnhall](#brawnhall--boxing-club) | Boxing gym | Heavy, hi-vis orange | Letterform (client's pick) |
-| [Solenne](#solenne--skincare) | Skincare | Daylight blue & gold | Pictorial (client's pick) |
-| [Mothlight](#mothlight--indie-game-studio) | Indie games | Ultraviolet & lamplight | Negative space |
-| [Loafwright](#loafwright--sourdough-bakery) | Bakery | Warm marigold | Mascot |
-| [Stillbrook](#stillbrook--craft-brewery) | Craft brewery | Turquoise & forge orange | Letterform |
-| [Marlow & Finch](#marlow--finch--estate-agency) | Real estate | Finch orange & ink | Pictorial ampersand |
-| [Kitewire](#kitewire--ai-agent-platform) | AI dev tools | Kite red & updraft yellow | Letterform |
-| [Roamwheel](#roamwheel--e-bike-subscription) | Urban mobility | Go lime & ink | Mascot (client's pick) |
+| <img src="docs/images/tiles/kiln.png" width="24" height="24" alt=""> [Kiln](#kiln--specialty-coffee-roaster) | Specialty coffee | Warm, crafted, modern | Letterform + custom wordmark |
+| <img src="docs/images/tiles/zestly.png" width="24" height="24" alt=""> [Zestly](#zestly--food-delivery-app) | Food delivery | Juicy, cheeky, tomato & lime | Mascot |
+| <img src="docs/images/tiles/maison-orvelle.png" width="24" height="24" alt=""> [Maison Orvelle](#maison-orvelle--luxury-fashion-atelier) | Luxury fashion | High-contrast Didone | Monogram |
+| <img src="docs/images/tiles/pulsewave.png" width="24" height="24" alt=""> [Pulsewave](#pulsewave--music--arts-festival) | Music festival | Neon on night, kinetic | Abstract letterform |
+| <img src="docs/images/tiles/tinkertrail.png" width="24" height="24" alt=""> [Tinkertrail](#tinkertrail--kids-stem-workshops) | Kids' STEM education | Playful, rounded, multi-colour | Letterform |
+| <img src="docs/images/tiles/ralli.png" width="24" height="24" alt=""> [Ralli](#ralli--padel--tennis-app) | Sports app | Dynamic italic, electric coral | Letterform |
+| <img src="docs/images/tiles/alderpeak.png" width="24" height="24" alt=""> [Alderpeak](#alderpeak--outdoor-gear) | Outdoor gear | Rugged, slab, earthy | Pictorial symbol |
+| <img src="docs/images/tiles/driftwell.png" width="24" height="24" alt=""> [Driftwell](#driftwell--surf-hostel--café) | Hospitality | Azulejo tile, coastal brights | Emblem + symbol |
+| <img src="docs/images/tiles/calmera.png" width="24" height="24" alt=""> [Calmera](#calmera--physiotherapy-clinic) | Physiotherapy | Soft, organic, calm | Pictorial symbol |
+| <img src="docs/images/tiles/bramble-vet.png" width="24" height="24" alt=""> [Bramble Vet](#bramble-vet--veterinary-clinic) | Veterinary | Friendly character, sunny | Mascot |
+| <img src="docs/images/tiles/voltra.png" width="24" height="24" alt=""> [Voltra](#voltra--solar-energy) | Clean energy | Geometric, volt orange | Abstract symbol |
+| <img src="docs/images/tiles/keyfort.png" width="24" height="24" alt=""> [Keyfort](#keyfort--password-manager) | Security SaaS | Strict grid, electric indigo & mint | Abstract symbol |
+| <img src="docs/images/tiles/relaydesk.png" width="24" height="24" alt=""> [Relaydesk](#relaydesk--customer-support-saas) | Support SaaS | Rounded, violet & coral | Abstract symbol |
+| <img src="docs/images/tiles/tracelane.png" width="24" height="24" alt=""> [Tracelane](#tracelane--product-analytics) | Developer analytics | Technical, acid & pink on carbon | Letterform |
+| <img src="docs/images/tiles/tallybook.png" width="24" height="24" alt=""> [Tallybook](#tallybook--invoicing--bookkeeping) | Small-business finance | Friendly, tangerine & teal | Letterform |
+| <img src="docs/images/tiles/northvault.png" width="24" height="24" alt=""> [Northvault](#northvault--digital-bank-for-freelancers) | Digital banking | Bold tile, hot magenta | Letterform |
+| <img src="docs/images/tiles/mediora.png" width="24" height="24" alt=""> [Mediora](#mediora--telehealth-app) | Telehealth | Soft, coral face on teal | Mascot |
+| <img src="docs/images/tiles/brightdose.png" width="24" height="24" alt=""> [Brightdose](#brightdose--online-pharmacy) | Online pharmacy | Sunny yellow & cobalt | Letterform |
+| <img src="docs/images/tiles/hearsay.png" width="24" height="24" alt=""> [Hearsay](#hearsay--podcast-network) | Podcast network | Bold pink, conversational | Letterform (client's pick) |
+| <img src="docs/images/tiles/norrvik.png" width="24" height="24" alt=""> [Norrvik](#norrvik--architecture-studio) | Architecture | Restrained, spruce green | Abstract symbol |
+| <img src="docs/images/tiles/brawnhall.png" width="24" height="24" alt=""> [Brawnhall](#brawnhall--boxing-club) | Boxing gym | Heavy, hi-vis orange | Letterform (client's pick) |
+| <img src="docs/images/tiles/solenne.png" width="24" height="24" alt=""> [Solenne](#solenne--skincare) | Skincare | Daylight blue & gold | Pictorial (client's pick) |
+| <img src="docs/images/tiles/mothlight.png" width="24" height="24" alt=""> [Mothlight](#mothlight--indie-game-studio) | Indie games | Ultraviolet & lamplight | Negative space |
+| <img src="docs/images/tiles/loafwright.png" width="24" height="24" alt=""> [Loafwright](#loafwright--sourdough-bakery) | Bakery | Warm marigold | Mascot |
+| <img src="docs/images/tiles/stillbrook.png" width="24" height="24" alt=""> [Stillbrook](#stillbrook--craft-brewery) | Craft brewery | Turquoise & forge orange | Letterform |
+| <img src="docs/images/tiles/marlow-finch.png" width="24" height="24" alt=""> [Marlow & Finch](#marlow--finch--estate-agency) | Real estate | Finch orange & ink | Pictorial ampersand |
+| <img src="docs/images/tiles/kitewire.png" width="24" height="24" alt=""> [Kitewire](#kitewire--ai-agent-platform) | AI dev tools | Kite red & updraft yellow | Letterform |
+| <img src="docs/images/tiles/roamwheel.png" width="24" height="24" alt=""> [Roamwheel](#roamwheel--e-bike-subscription) | Urban mobility | Go lime & ink | Mascot (client's pick) |
 
 ### Kiln — specialty coffee roaster
 *Small-batch roaster in Istanbul: warm, crafted and modern — not rustic cliché. Must work on bags, cups and an Instagram avatar.*
