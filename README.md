@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/kaankiziltug/logo-design-skill/actions/workflows/test.yml/badge.svg)](https://github.com/kaankiziltug/logo-design-skill/actions/workflows/test.yml) [![The New 100: #14](https://www.theagenticleaderboard.com/badges/new/logo-design-skill.svg)](#)
 
-![Eighteen example runs of the logo-design skill](docs/images/hero.png)
+![Twenty-eight example runs of the logo-design skill](docs/images/hero.png)
 
 A comprehensive **logo-design skill** that turns Claude — or any agent that supports Agent Skills, such as Gemini
 CLI, Codex CLI, Cursor or GitHub Copilot — into a disciplined identity designer, from the first brief to
@@ -44,12 +44,15 @@ makes sense for an approved idea.
 
 ## Examples
 
-Eighteen fictional briefs, from quiet luxury and neon festivals to B2B SaaS, fintech and health — each run end to
+Twenty-eight fictional briefs, from quiet luxury and neon festivals to B2B SaaS, fintech and health — each run end to
 end with the skill. For every brand you see exactly what the skill shows at the checkpoint (greyscale concepts with
 true 64/32/16 px sizes and a recommendation), followed by a colour preview of the chosen direction on mockups picked
 for that industry. Later batches deliberately push **vivid, saturated palettes** while still passing the one-colour
 and 3 : 1 contrast checks. The newest batch takes on three crowded categories: **SaaS** (no chat bubbles, charts or
 padlocks), **finance** (no coins, piggy banks or bank blue) and **health** (no crosses, pills or heartbeat lines).
+The latest ten add another ten sectors. In four of them the client picked a different concept at the checkpoint than
+the one the skill recommended, and the skill refined that choice before colouring it: exactly what the checkpoint is
+for.
 
 | Brand | Sector | Style | Chosen mark |
 |---|---|---|---|
@@ -71,6 +74,16 @@ padlocks), **finance** (no coins, piggy banks or bank blue) and **health** (no c
 | [Northvault](#northvault--digital-bank-for-freelancers) | Digital banking | Bold tile, hot magenta | Letterform |
 | [Mediora](#mediora--telehealth-app) | Telehealth | Soft, coral face on teal | Mascot |
 | [Brightdose](#brightdose--online-pharmacy) | Online pharmacy | Sunny yellow & cobalt | Letterform |
+| [Hearsay](#hearsay--podcast-network) | Podcast network | Bold pink, conversational | Letterform (client's pick) |
+| [Norrvik](#norrvik--architecture-studio) | Architecture | Restrained, spruce green | Abstract symbol |
+| [Brawnhall](#brawnhall--boxing-club) | Boxing gym | Heavy, hi-vis orange | Letterform (client's pick) |
+| [Solenne](#solenne--skincare) | Skincare | Daylight blue & gold | Pictorial (client's pick) |
+| [Mothlight](#mothlight--indie-game-studio) | Indie games | Ultraviolet & lamplight | Negative space |
+| [Loafwright](#loafwright--sourdough-bakery) | Bakery | Warm marigold | Mascot |
+| [Stillbrook](#stillbrook--craft-brewery) | Craft brewery | Turquoise & forge orange | Letterform |
+| [Marlow & Finch](#marlow--finch--estate-agency) | Real estate | Finch orange & ink | Pictorial ampersand |
+| [Kitewire](#kitewire--ai-agent-platform) | AI dev tools | Kite red & updraft yellow | Letterform |
+| [Roamwheel](#roamwheel--e-bike-subscription) | Urban mobility | Go lime & ink | Mascot (client's pick) |
 
 ### Kiln — specialty coffee roaster
 *Small-batch roaster in Istanbul: warm, crafted and modern — not rustic cliché. Must work on bags, cups and an Instagram avatar.*
@@ -233,6 +246,96 @@ padlocks), **finance** (no coins, piggy banks or bank blue) and **health** (no c
 **Recommended: Sunspot b** — a lowercase *b* that holds a small sun in its counter: a bright spot in every day. Sunrise yellow is rare in a green-and-blue category; on yellow bags and app tiles the whole mark turns one-colour cobalt. Rejected along the way: a seven-bar sun that looked like a helmet and a peel that looked like a moon.
 
 ![Brightdose in use](docs/images/brightdose-board.png)
+
+### Hearsay — podcast network
+*Twelve narrative and interview shows about culture, science and true stories: curious, expressive, warm — no microphones, headphones, sound waves or speech bubbles.*
+
+![Hearsay concepts](docs/images/hearsay-concepts.png)
+
+**Chosen: Pull-up Chair** — a lowercase *h* whose ascender is a backrest tilted back 15°: pull up a chair, stay for the story. The skill had recommended *Curious Ear* (a question mark whose hook is an ear); the client picked the chair at the checkpoint, and the skill thinned its seat to match the legs before colouring it in Hearsay Pink.
+
+![Hearsay in use](docs/images/hearsay-board.png)
+
+### Norrvik — architecture studio
+*Scandinavian studio for timber housing, libraries and schools, known for daylight: precise, calm, enduring — no houses, roofs, blueprints or compasses.*
+
+![Norrvik concepts](docs/images/norrvik-concepts.png)
+
+**Recommended: Knot** — timber grain bending around one offset knot, where a branch once reached for the light. A first favourite (an N cut through a timber block) was dropped in review because it looked too much like Northvault in this series; the accent moved from orange to spruce green to keep the set varied.
+
+![Norrvik in use](docs/images/norrvik-board.png)
+
+### Brawnhall — boxing club
+*A boxing and conditioning gym in an old warehouse, with classes for complete beginners: tough, disciplined, welcoming — no gloves, lightning, skulls or fists.*
+
+![Brawnhall concepts](docs/images/brawnhall-concepts.png)
+
+**Chosen: Hall B** — a heavy *B* whose counters are the old hall's fanlight and arched door, the doorway lit in hi-vis orange: the door's open, the work's inside. The skill had recommended *Open Ropes*; after the client's pick, the craft pass enlarged the window and deepened the waist so the B no longer read as a D at 16 px.
+
+![Brawnhall in use](docs/images/brawnhall-board.png)
+
+### Solenne — skincare
+*Sunlight-smart skincare (serums, daily SPF, barrier creams): luminous, fresh, gentle — no leaves, drops, faces or sun rays.*
+
+![Solenne concepts](docs/images/solenne-concepts.png)
+
+**Chosen: Persienne** — the sun seen through louvred shutters: let the light in, keep the glare out. The skill had recommended *Day of Sun* (an S of 13 suns); for the chosen shutters it reworked the proportions and the slat rhythm so the mark stays clear of striped marks such as IBM's.
+
+![Solenne in use](docs/images/solenne-board.png)
+
+### Mothlight — indie game studio
+*An eight-person studio making cozy adventure games about exploring at night: curious, warm, mysterious — no controllers, pixel hearts or big-eyed mascots.*
+
+![Mothlight concepts](docs/images/mothlight-concepts.png)
+
+**Recommended: Half-light Moth** — a moth on the edge of the lamplight: one half is a shadow, the other half is light cut out of the night. Ultraviolet with lamplight yellow.
+
+![Mothlight in use](docs/images/mothlight-board.png)
+
+### Loafwright — sourdough bakery
+*A neighbourhood sourdough bakery where the bakers start at 3 am: warm, generous, cheerful — no wheat, rolling pins or chef hats.*
+
+![Loafwright concepts](docs/images/loafwright-concepts.png)
+
+**Recommended: Early Lark** — a round loaf that is also a lark: the ear of its score lifts into the crest. Crust marigold with a jam-pink beak, and one solid silhouette that stamps in a single ink on kraft bags.
+
+![Loafwright in use](docs/images/loafwright-board.png)
+
+### Stillbrook — craft brewery
+*Craft brewery and taproom in a converted riverside mill: characterful, bold, local — no hops, barrels, mugs or anchors.*
+
+![Stillbrook concepts](docs/images/stillbrook-concepts.png)
+
+**Recommended: Wall-tie S** — the forged iron S-anchor that holds the old mill's walls together, bolted through its middle. A heron idea was dropped in review because Calmera in this series already stands on one leg.
+
+![Stillbrook in use](docs/images/stillbrook-board.png)
+
+### Marlow & Finch — estate agency
+*A boutique estate agency known for honest valuations and great photography: trustworthy, warm, premium — no roofs, houses, keys or map pins.*
+
+![Marlow & Finch concepts](docs/images/marlow-finch-concepts.png)
+
+**Recommended: Finch Ampersand** — the *&* in the name is a perched finch: the partnership and the name in one sign. After the checkpoint the client asked for a bigger beak; it grew 1.5× with one clean join to the throat, and the & still reads first at 16 px.
+
+![Marlow & Finch in use](docs/images/marlow-finch-board.png)
+
+### Kitewire — AI agent platform
+*A developer platform for building, testing and deploying AI agents: reliable, fast, controllable — no sparkles, brains, circuits or robot heads.*
+
+![Kitewire concepts](docs/images/kitewire-concepts.png)
+
+**Recommended: Kite-cut K** — three straight cuts divide a solid kite into panels, and the seams spell K: autonomy, always on a line. Kite red with an updraft-yellow panel, away from the category's blues and violets.
+
+![Kitewire in use](docs/images/kitewire-board.png)
+
+### Roamwheel — e-bike subscription
+*A monthly e-bike subscription for city commuters: light, fast, optimistic — no bike silhouettes, lightning or eco leaves.*
+
+![Roamwheel concepts](docs/images/roamwheel-concepts.png)
+
+**Chosen: Roamie** — a tyre on two legs with a half-lidded smirk: a wheel with somewhere to be. The skill's first pick read as a play button in review, and its second (an m/w ambigram) lost to the mascot at the checkpoint; the craft pass then split tyre and rim so it reads as a wheel, not a donut.
+
+![Roamwheel in use](docs/images/roamwheel-board.png)
 
 ---
 
