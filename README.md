@@ -44,6 +44,8 @@ makes sense for an approved idea.
 
 ## Examples
 
+![Covers for all 28 example brands](docs/images/covers-28.png)
+
 Twenty-eight fictional briefs, from quiet luxury and neon festivals to B2B SaaS, fintech and health — each run end to
 end with the skill. For every brand you see exactly what the skill shows at the checkpoint (greyscale concepts with
 true 64/32/16 px sizes and a recommendation), followed by a colour preview of the chosen direction on mockups picked
