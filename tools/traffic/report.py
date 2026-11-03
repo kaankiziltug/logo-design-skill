@@ -12,6 +12,7 @@ import argparse
 import csv
 import datetime
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -20,6 +21,7 @@ UNIQUES_COLOR = "#93c5fd"
 CLONES_COLOR = "#059669"
 CLONERS_COLOR = "#6ee7b7"
 STARS_COLOR = "#d97706"
+DOWNLOADS_COLOR = "#7c3aed"
 
 
 def read_rows(path):
@@ -129,6 +131,25 @@ def latest_snapshot(rows):
     return snap, [r for r in rows if r["snapshot"] == snap]
 
 
+def release_summary(rows):
+    """Per-snapshot download totals and the latest snapshot's rows."""
+    totals = defaultdict(int)
+    for r in rows:
+        totals[r["snapshot"]] += int(r["count"])
+    snap, latest = latest_snapshot(rows)
+    return dict(sorted(totals.items())), snap, latest
+
+
+def total_on(totals, day):
+    """Download total from the newest snapshot on or before day."""
+    earlier = [d for d in totals if d <= day]
+    return totals[earlier[-1]] if earlier else None
+
+
+def version_key(tag):
+    return [int(n) for n in re.findall(r"\d+", tag)]
+
+
 def build(data, repo, today):
     views = daily_series(read_rows(data / "views.csv"))
     clones = daily_series(read_rows(data / "clones.csv"))
@@ -137,6 +158,7 @@ def build(data, repo, today):
     ref_snap, referrers = latest_snapshot(read_rows(data / "referrers.csv"))
     _, paths = latest_snapshot(read_rows(data / "paths.csv"))
     new_stars = {r["date"]: int(r["new"]) for r in stars}
+    dl_totals, dl_snap, dl_rows = release_summary(read_rows(data / "releases.csv"))
 
     if not views:
         raise SystemExit(f"No views.csv in {data}; run collect.py first.")
@@ -167,6 +189,13 @@ def build(data, repo, today):
         (charts / "stars.svg").write_text(
             line_chart(star_days, [("Total stars", totals, STARS_COLOR)]), encoding="utf-8")
 
+    if len(dl_totals) > 1:
+        snaps = list(dl_totals)
+        (charts / "downloads.svg").write_text(line_chart(snaps[1:], [
+            ("Release downloads per day", [dl_totals[b] - dl_totals[a] for a, b in zip(snaps, snaps[1:])],
+             DOWNLOADS_COLOR),
+        ]), encoding="utf-8")
+
     def row(label, by_date, index):
         cur, prev = window_sum(by_date, last7, index), window_sum(by_date, prev7, index)
         total = window_sum(by_date, days, index)
@@ -194,8 +223,19 @@ def build(data, repo, today):
         row("Unique cloners\\*", clones, 1),
         f"| New stars | {num(star_cur)} | {num(star_prev)} | {change(star_cur, star_prev)} "
         f"| {num(int(stars[-1]['total'])) if stars else '—'} |",
-        "",
     ]
+    if dl_totals:
+        # Totals are all-time, so a week's downloads is the change between snapshots.
+        anchor = datetime.date.fromisoformat(dl_snap)
+        t0, t7, t14 = (total_on(dl_totals, (anchor - datetime.timedelta(days=k)).isoformat())
+                       for k in (0, 7, 14))
+        dl_cur = t0 - t7 if t7 is not None else None
+        dl_prev = t7 - t14 if t7 is not None and t14 is not None else None
+        lines.append(
+            f"| Release downloads | {num(dl_cur) if dl_cur is not None else '—'} "
+            f"| {num(dl_prev) if dl_prev is not None else '—'} "
+            f"| {change(dl_cur, dl_prev) if dl_prev is not None else '—'} | {num(t0)} (all time) |")
+    lines.append("")
     if latest:
         lines += [
             f"**{num(int(latest['stars']))}** stars · **{num(int(latest['forks']))}** forks · "
@@ -214,13 +254,36 @@ def build(data, repo, today):
         "",
         "## Clones",
         "",
-        "Clones are the closest signal to installs: GitHub doesn't count plugin marketplace installs separately.",
+        "Clones include repeats and automation (CI jobs, update checks, bots), so one client can add thousands "
+        "in a day. Unique cloners is the steadier number.",
         "",
         "![Daily clones](charts/clones.svg)",
         "",
     ]
     if stars:
         lines += ["## Stars", "", "![Total stars](charts/stars.svg)", ""]
+
+    if dl_rows:
+        lite = sum(int(r["count"]) for r in dl_rows if "lite" in r["asset"])
+        full = dl_totals[dl_snap] - lite
+        lines += [
+            "## Release downloads",
+            "",
+            f"**{num(dl_totals[dl_snap])}** zip downloads of all releases, all time "
+            f"(full **{num(full)}**, lite **{num(lite)}**). "
+            f"Downloaded zips are a stronger install signal than clones. Tracked daily since {min(dl_totals)}.",
+            "",
+        ]
+        if len(dl_totals) > 1:
+            lines += ["![Release downloads per day](charts/downloads.svg)", ""]
+        by_tag = defaultdict(lambda: [0, 0])
+        for r in dl_rows:
+            by_tag[r["tag"]]["lite" in r["asset"]] += int(r["count"])
+        lines += ["| Release | Full | Lite | Total |", "|---|---:|---:|---:|"]
+        for tag in sorted(by_tag, key=version_key, reverse=True):
+            f, l = by_tag[tag]
+            lines.append(f"| {tag} | {num(f)} | {num(l)} | {num(f + l)} |")
+        lines.append("")
 
     if referrers:
         total_ref = sum(int(r["count"]) for r in referrers) or 1
@@ -259,7 +322,8 @@ def build(data, repo, today):
         "## Raw data",
         "",
         "`views.csv` and `clones.csv` (daily), `referrers.csv` and `paths.csv` (one 14-day snapshot per day), "
-        "`repo.csv` (daily stars, forks, watchers), `stars.csv` (stars per day since the repo was created).",
+        "`repo.csv` (daily stars, forks, watchers), `stars.csv` (stars per day since the repo was created), "
+        "`releases.csv` (all-time downloads per release asset, one snapshot per day).",
         "",
     ]
     (data / "README.md").write_text("\n".join(lines), encoding="utf-8")
