@@ -18,6 +18,7 @@ import datetime
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from collections import Counter
 from pathlib import Path
@@ -38,8 +39,12 @@ def get(path, token, accept="application/vnd.github+json"):
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "logo-design-skill-traffic",
     })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as err:
+        detail = err.read().decode("utf-8", "replace")[:300]
+        raise RuntimeError(f"GET {path} -> HTTP {err.code}: {detail}") from None
 
 
 def read_rows(path):
@@ -126,7 +131,14 @@ def collect(repo, token, out, today):
     }])[0]
     write_rows(out / "repo.csv", REPO_FIELDS, [repo_rows[d] for d in sorted(repo_rows)])
 
-    write_rows(out / "stars.csv", STAR_FIELDS, stringify(star_history(repo, token)))
+    # Traffic is the data that expires, so a failing star fetch must not lose
+    # it: keep the previous stars.csv and carry on.
+    try:
+        stars = star_history(repo, token)
+    except RuntimeError as err:
+        print(f"::warning::Star history not updated: {err}", file=sys.stderr)
+    else:
+        write_rows(out / "stars.csv", STAR_FIELDS, stringify(stars))
     return views, clones
 
 
