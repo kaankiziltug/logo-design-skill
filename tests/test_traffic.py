@@ -37,6 +37,13 @@ class TrafficArchive(unittest.TestCase):
         self.assertEqual([(r['snapshot'], r['referrer']) for r in collect.read_rows(path)],
                          [('2026-10-01', 'old'), ('2026-10-02', 'Google')])
 
+    def test_star_total_fallback_counts_against_previous_day(self):
+        rows = [{'date': '2026-10-01', 'new': '5', 'total': '5'},
+                {'date': '2026-10-02', 'new': '1', 'total': '6'}]
+        rows = collect.add_star_total(rows, '2026-10-02', 9)
+        self.assertEqual(rows[-1], {'date': '2026-10-02', 'new': 4, 'total': 9})
+        self.assertEqual(collect.add_star_total([], '2026-10-03', 2)[-1]['new'], 2)
+
     def test_report_builds_readme_and_valid_svgs(self):
         days = [day(f'2026-10-{d:02d}', d * 10, d) for d in range(1, 16)]
         collect.merge_daily(self.dir / 'views.csv', days)

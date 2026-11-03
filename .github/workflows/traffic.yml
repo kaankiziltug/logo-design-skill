@@ -42,7 +42,6 @@ jobs:
       - name: Collect traffic
         env:
           TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
         run: python src/tools/traffic/collect.py --repo "$GITHUB_REPOSITORY" --out data
       - name: Build dashboard
         run: python src/tools/traffic/report.py --data data --repo "$GITHUB_REPOSITORY"
