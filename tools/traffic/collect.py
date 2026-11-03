@@ -3,7 +3,8 @@
 
 Each run merges the current 14-day window into CSV files under --out, so the
 history keeps growing for as long as the job runs. Star history is rebuilt in
-full every time from the stargazers API, which has no 14-day limit.
+full from the stargazers API when the token allows it (classic tokens do;
+fine-grained and Actions tokens get 403), otherwise today's total is added.
 
 Needs a token that can read the repo's traffic (a fine-grained token with
 "Administration: Read-only"), in TRAFFIC_TOKEN or GITHUB_TOKEN.
@@ -18,6 +19,7 @@ import datetime
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from collections import Counter
 from pathlib import Path
@@ -38,8 +40,12 @@ def get(path, token, accept="application/vnd.github+json"):
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "logo-design-skill-traffic",
     })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as err:
+        detail = err.read().decode("utf-8", "replace")[:300]
+        raise RuntimeError(f"GET {path} -> HTTP {err.code}: {detail}") from None
 
 
 def read_rows(path):
@@ -102,6 +108,14 @@ def star_history(repo, token):
     return rows
 
 
+def add_star_total(rows, today, total):
+    """Record today's star count, counting new stars against the last day
+    before today."""
+    earlier = [r for r in rows if r["date"] < today]
+    previous = int(earlier[-1]["total"]) if earlier else 0
+    return earlier + [{"date": today, "new": total - previous, "total": total}]
+
+
 def collect(repo, token, out, today):
     views = get(f"/repos/{repo}/traffic/views", token)
     clones = get(f"/repos/{repo}/traffic/clones", token)
@@ -126,7 +140,12 @@ def collect(repo, token, out, today):
     }])[0]
     write_rows(out / "repo.csv", REPO_FIELDS, [repo_rows[d] for d in sorted(repo_rows)])
 
-    write_rows(out / "stars.csv", STAR_FIELDS, stringify(star_history(repo, token)))
+    try:
+        stars = star_history(repo, token)
+    except RuntimeError as err:
+        print(f"Full star history unavailable ({err}); adding today's total.")
+        stars = add_star_total(read_rows(out / "stars.csv"), today, info["stargazers_count"])
+    write_rows(out / "stars.csv", STAR_FIELDS, stringify(stars))
     return views, clones
 
 
