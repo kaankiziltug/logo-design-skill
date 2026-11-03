@@ -6,7 +6,8 @@ history keeps growing for as long as the job runs. Star history is rebuilt in
 full every time from the stargazers API, which has no 14-day limit.
 
 Needs a token that can read the repo's traffic (a fine-grained token with
-"Administration: Read-only"), in TRAFFIC_TOKEN or GITHUB_TOKEN.
+"Administration: Read-only"), in TRAFFIC_TOKEN or GITHUB_TOKEN. Stars are
+read with GITHUB_TOKEN when it is set.
 
 Usage:
     python tools/traffic/collect.py --repo owner/name --out traffic-data
@@ -107,7 +108,7 @@ def star_history(repo, token):
     return rows
 
 
-def collect(repo, token, out, today):
+def collect(repo, token, out, today, star_token=None):
     views = get(f"/repos/{repo}/traffic/views", token)
     clones = get(f"/repos/{repo}/traffic/clones", token)
     referrers = get(f"/repos/{repo}/traffic/popular/referrers", token)
@@ -134,7 +135,7 @@ def collect(repo, token, out, today):
     # Traffic is the data that expires, so a failing star fetch must not lose
     # it: keep the previous stars.csv and carry on.
     try:
-        stars = star_history(repo, token)
+        stars = star_history(repo, star_token or token)
     except RuntimeError as err:
         print(f"::warning::Star history not updated: {err}", file=sys.stderr)
     else:
@@ -153,7 +154,10 @@ def main():
         sys.exit("Set TRAFFIC_TOKEN (or GITHUB_TOKEN) to a token that can read traffic.")
 
     today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-    views, clones = collect(args.repo, token, args.out, today)
+    # Fine-grained tokens can't list stargazers; the workflow's own
+    # GITHUB_TOKEN can, since they're public.
+    views, clones = collect(args.repo, token, args.out, today,
+                            star_token=os.environ.get("GITHUB_TOKEN"))
     print(f"{args.repo}: 14-day window has {views['count']} views, "
           f"{clones['count']} clones; archived to {args.out}")
 
