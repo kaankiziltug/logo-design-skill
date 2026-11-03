@@ -44,6 +44,20 @@ class TrafficArchive(unittest.TestCase):
         self.assertEqual(rows[-1], {'date': '2026-10-02', 'new': 4, 'total': 9})
         self.assertEqual(collect.add_star_total([], '2026-10-03', 2)[-1]['new'], 2)
 
+    def test_release_downloads_per_week_come_from_snapshot_changes(self):
+        collect.merge_daily(self.dir / 'views.csv', [day('2026-10-01', 1, 1)])
+        path, fields = self.dir / 'releases.csv', collect.RELEASE_FIELDS
+        key = lambda r: (r['tag'], r['asset'])
+        for snap, full, lite in (('2026-10-01', 100, 40), ('2026-10-08', 160, 50)):
+            collect.replace_snapshot(path, fields, snap, [
+                {'tag': 'v1.0.0', 'asset': 'x.zip', 'count': full},
+                {'tag': 'v1.0.0', 'asset': 'x-lite.zip', 'count': lite}], key)
+        report.build(self.dir, 'owner/repo', '2026-10-08')
+        readme = (self.dir / 'README.md').read_text(encoding='utf-8')
+        self.assertIn('| Release downloads | 70 | — | — | 210 (all time) |', readme)
+        self.assertIn('| v1.0.0 | 160 | 50 | 210 |', readme)
+        ET.fromstring((self.dir / 'charts' / 'downloads.svg').read_text(encoding='utf-8'))
+
     def test_report_builds_readme_and_valid_svgs(self):
         days = [day(f'2026-10-{d:02d}', d * 10, d) for d in range(1, 16)]
         collect.merge_daily(self.dir / 'views.csv', days)

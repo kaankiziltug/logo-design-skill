@@ -30,6 +30,7 @@ DAILY_FIELDS = ["date", "count", "uniques"]
 REFERRER_FIELDS = ["snapshot", "referrer", "count", "uniques"]
 PATH_FIELDS = ["snapshot", "path", "title", "count", "uniques"]
 REPO_FIELDS = ["date", "stars", "forks", "watchers", "open_issues"]
+RELEASE_FIELDS = ["snapshot", "tag", "asset", "count"]
 STAR_FIELDS = ["date", "new", "total"]
 
 
@@ -108,6 +109,19 @@ def star_history(repo, token):
     return rows
 
 
+def release_downloads(repo, token):
+    """All-time download count of every release asset."""
+    rows, page = [], 1
+    while True:
+        batch = get(f"/repos/{repo}/releases?per_page=100&page={page}", token)
+        if not batch:
+            break
+        rows += [{"tag": rel["tag_name"], "asset": a["name"], "count": a["download_count"]}
+                 for rel in batch for a in rel["assets"]]
+        page += 1
+    return rows
+
+
 def add_star_total(rows, today, total):
     """Record today's star count, counting new stars against the last day
     before today."""
@@ -146,6 +160,16 @@ def collect(repo, token, out, today):
         print(f"Full star history unavailable ({err}); adding today's total.")
         stars = add_star_total(read_rows(out / "stars.csv"), today, info["stargazers_count"])
     write_rows(out / "stars.csv", STAR_FIELDS, stringify(stars))
+
+    # Download counts are all-time totals; a daily snapshot turns them into
+    # downloads per day.
+    try:
+        releases = release_downloads(repo, token)
+    except RuntimeError as err:
+        print(f"::warning::Release downloads not updated: {err}", file=sys.stderr)
+    else:
+        replace_snapshot(out / "releases.csv", RELEASE_FIELDS, today, releases,
+                         sort_key=lambda r: (r["tag"], r["asset"]))
     return views, clones
 
 
