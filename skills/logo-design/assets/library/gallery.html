@@ -7,7 +7,9 @@
 *{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
 header{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
 h1{font-size:18px;margin:0 0 8px}.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-select,input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+select,input,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
 label{display:flex;gap:4px;align-items:center;color:var(--muted)}#count{color:var(--muted);margin-left:auto}
 main{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
@@ -25,6 +27,7 @@ main{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:
 <select id="fam"><option value="">all colour families</option></select>
 <label><input type="checkbox" id="ex"> exemplary only</label>
 <label><input type="checkbox" id="icon"> icons only</label>
+<button type="button" id="clear" disabled>clear filters</button>
 <span id="count"></span></div></header>
 <main id="grid"></main>
 <script>
@@ -43,6 +46,8 @@ function render(){
    <div class="name">${d.exemplary?'<span class="star">★</span> ':''}${d.file}</div>
    <div class="meta">${d.mark_type}${d.symbol_type?' · '+d.symbol_type:''} · ${d.industry} · ${d.n_colors} col</div>
    <div class="meta">${(d.techniques||[]).join(', ')}</div>${d.note?`<div class="note">${d.note}</div>`:''}</div>`).join('');
+  $('clear').disabled = !($('q').value||$('type').value||$('tech').value||$('geo').value||$('ind').value||$('fam').value||$('ex').checked||$('icon').checked);
 }
+$('clear').addEventListener('click',()=>{['q','type','tech','geo','ind','fam'].forEach(id=>$(id).value='');$('ex').checked=$('icon').checked=false;$('q').focus();render()});
 ['q','type','tech','geo','ind','fam','ex','icon'].forEach(id=>$(id).addEventListener('input',render)); render();
 </script></body></html>
