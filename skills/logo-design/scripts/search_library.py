@@ -29,8 +29,7 @@ import svglib  # noqa: E402
 def load_catalog():
     if not os.path.exists(svglib.CATALOG_PATH):
         sys.exit("catalog.json not found - run scripts/build_catalog.py first")
-    with open(svglib.CATALOG_PATH, encoding="utf-8") as fh:
-        return json.load(fh)
+    return json.loads(svglib.safety.bounded_read(svglib.CATALOG_PATH))
 
 
 def matches(r, a):

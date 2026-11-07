@@ -39,10 +39,18 @@ function render(){
     &&(!i||d.industry===i)&&(!f||d.primary_family===f)&&(!$('ex').checked||d.exemplary)&&(!$('icon').checked||d.aspect_class==='square')
     &&(!q||(d.file+' '+(d.subject||'')+' '+(d.note||'')).toLowerCase().includes(q)));
   $('count').textContent = rows.length + ' / ' + DATA.length;
-  $('grid').innerHTML = rows.slice(0,600).map(d=>`<div class="card"><div class="thumb"><img loading="lazy" src="svg/${d.file}" alt="${d.brand}"></div>
-   <div class="name">${d.exemplary?'<span class="star">★</span> ':''}${d.file}</div>
-   <div class="meta">${d.mark_type}${d.symbol_type?' · '+d.symbol_type:''} · ${d.industry} · ${d.n_colors} col</div>
-   <div class="meta">${(d.techniques||[]).join(', ')}</div>${d.note?`<div class="note">${d.note}</div>`:''}</div>`).join('');
+  $('grid').replaceChildren();
+  rows.slice(0,600).forEach(d=>{
+    const card=document.createElement('div');card.className='card';
+    const thumb=document.createElement('div');thumb.className='thumb';
+    const image=document.createElement('img');image.loading='lazy';image.alt=String(d.brand||'');
+    image.src='svg/'+encodeURIComponent(d.file);thumb.appendChild(image);card.appendChild(thumb);
+    const add=(cls,text)=>{const node=document.createElement('div');node.className=cls;node.textContent=text;card.appendChild(node)};
+    add('name',(d.exemplary?'★ ':'')+d.file);
+    add('meta',d.mark_type+(d.symbol_type?' · '+d.symbol_type:'')+' · '+d.industry+' · '+d.n_colors+' col');
+    add('meta',(d.techniques||[]).join(', '));if(d.note)add('note',d.note);
+    $('grid').appendChild(card);
+  });
 }
 ['q','type','tech','geo','ind','fam','ex','icon'].forEach(id=>$(id).addEventListener('input',render)); render();
 </script></body></html>

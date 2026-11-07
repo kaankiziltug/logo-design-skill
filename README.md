@@ -24,6 +24,31 @@ production-ready SVG files and brand guidelines.
 
 ---
 
+## Input safety and changed CLI defaults
+
+The Python tools require **Python 3.9+**. They accept a bounded static SVG subset,
+serialize validated XML before embedding/rendering, escape presentation text, and
+canonicalize colours. Every bundled SVG (1,432 assets) is covered by validation
+tests, including masks, filters, internal use references and embedded PNG.
+
+Outputs now default to **no-clobber**; pass `--overwrite` only to replace existing
+regular files. Symlink outputs, input/output aliases, planned collisions and
+nonportable export `--name` values are refused. Presentation assets default to
+the resolved JSON spec directory; only CLI `--asset-root DIR` can widen it.
+Explicit CLI input and output directories remain unrestricted owner choices.
+
+`render_png.py` accepts SVG, **not arbitrary HTML screenshots**. Board
+`--png-dir` and the Chrome SVG backend use private generated documents with a
+restrictive CSP and a private browser profile, without disabling the browser
+sandbox. Requested raster failures now exit nonzero instead of silently skipping.
+Regenerate an existing catalog/gallery with `build_catalog.py --overwrite`.
+
+See [static-input/output boundaries and resource limits](skills/logo-design/references/security.md)
+for accepted SVG/CSS/colour constructs, file/job/raster/timeout caps, residual
+concurrency risks and optional in-process renderer limits. This is **not a
+host/process sandbox or a generic HTML sanitizer**. Use owner-controlled working
+directories and maintained renderers.
+
 ## How it works
 
 ```mermaid
@@ -436,7 +461,7 @@ python3 scripts/render_png.py my-logo.svg --size 512 -o my-logo.png
 python3 scripts/export_variants.py my-logo.svg --mono "#0F7C80" --icon-bg "#0F7C80" --web-icons
 open assets/library/gallery.html      # browse the library visually
 ```
-Requires Python 3.8+ (standard library only). PNG/ICO export uses whatever renderer is available: `cairosvg`,
+Requires Python 3.9+ (standard library only). PNG/ICO export uses whatever renderer is available: `cairosvg`,
 `rsvg-convert`, Inkscape, a Chromium-based browser (Chrome, Edge, Brave) or macOS Quick Look.
 
 ## What's inside

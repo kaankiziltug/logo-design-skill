@@ -1,7 +1,7 @@
 """Shared, dependency-free SVG helpers for the logo-design skill scripts.
 
 Parses SVG structure, colours, transforms and path geometry well enough to audit logos:
-anchor counts, bounding boxes, straight-segment angles and tiny sub-paths. Python 3.8+.
+anchor counts, bounding boxes, straight-segment angles and tiny sub-paths. Python 3.9+.
 """
 import base64
 import colorsys
@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+import safety
 
 
 def _use_utf8_console():
@@ -44,31 +45,19 @@ def local(tag):
 
 
 def load_svg(path):
-    with open(path, encoding="utf-8", errors="ignore") as fh:
-        raw = fh.read()
-    root = ET.fromstring(raw)
-    return raw, root
+    return safety.load_svg(path)
 
 
 def svg_data_uri(path):
-    """Base64 data URI for <img> use. Adds width/height from the viewBox when missing, because browsers give
-    viewBox-only SVGs a default 300×150 box (or none) and they can vanish inside flex/max-height layouts."""
-    with open(path, "rb") as fh:
-        data = fh.read()
-    text = data.decode("utf-8", errors="ignore")
-    m = re.search(r"<svg\b[^>]*>", text)
-    if m:
-        tag = m.group(0)
-        has_w = re.search(r'\swidth\s*=\s*"', tag)
-        has_h = re.search(r'\sheight\s*=\s*"', tag)
-        vb = re.search(r'viewBox\s*=\s*"([^"]+)"', tag)
-        if vb and not (has_w and has_h):
-            parts = [p for p in re.split(r"[ ,]+", vb.group(1).strip()) if p]
-            if len(parts) == 4:
-                new_tag = re.sub(r'\s(width|height)\s*=\s*"[^"]*"', "", tag)
-                new_tag = new_tag[:-1].rstrip("/") + f' width="{parts[2]}" height="{parts[3]}">'
-                data = text.replace(tag, new_tag, 1).encode("utf-8")
-    return "data:image/svg+xml;base64," + base64.b64encode(data).decode("ascii")
+    """Embed only the canonical validated XML, never the original bytes."""
+    _, root = load_svg(path)
+    vb = view_box(root)
+    if vb and not (root.get('width') and root.get('height')):
+        root.set('width', str(vb[2]))
+        root.set('height', str(vb[3]))
+    data = safety.serialize(root).encode('utf-8')
+    return 'data:image/svg+xml;base64,' + base64.b64encode(data).decode('ascii')
+
 
 
 # ----------------------------------------------------------------------------- colours
@@ -187,46 +176,19 @@ def collect_colors(root):
 # ----------------------------------------------------------------------------- transforms
 
 def mat_mul(a, b):
-    return (a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
-            a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
-            a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5])
+    return safety.multiply_matrix(a, b)
 
 
 IDENTITY = (1, 0, 0, 1, 0, 0)
 
 
 def parse_transform(s):
-    m = IDENTITY
-    if not s:
-        return m
-    for name, args in re.findall(r"(\w+)\s*\(([^)]*)\)", s):
-        v = [float(x) for x in re.findall(r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?", args)]
-        if name == "matrix" and len(v) == 6:
-            t = tuple(v)
-        elif name == "translate":
-            t = (1, 0, 0, 1, v[0], v[1] if len(v) > 1 else 0)
-        elif name == "scale":
-            t = (v[0], 0, 0, v[1] if len(v) > 1 else v[0], 0, 0)
-        elif name == "rotate":
-            a = math.radians(v[0])
-            r = (math.cos(a), math.sin(a), -math.sin(a), math.cos(a), 0, 0)
-            if len(v) == 3:
-                t = mat_mul(mat_mul((1, 0, 0, 1, v[1], v[2]), r), (1, 0, 0, 1, -v[1], -v[2]))
-            else:
-                t = r
-        elif name == "skewX":
-            t = (1, 0, math.tan(math.radians(v[0])), 1, 0, 0)
-        elif name == "skewY":
-            t = (1, math.tan(math.radians(v[0])), 0, 1, 0, 0)
-        else:
-            continue
-        m = mat_mul(m, t)
-    return m
+    return safety.transform_matrix(s)
 
 
 def apply(m, pt):
     x, y = pt
-    return (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5])
+    return safety.finite(m[0] * x + m[2] * y + m[4]), safety.finite(m[1] * x + m[3] * y + m[5])
 
 
 # ----------------------------------------------------------------------------- path parsing
@@ -244,32 +206,7 @@ def tokenize_path(d):
 
     Handles compact arc flags such as 'a10 10 0 0110 10' (flags are single 0/1 characters).
     """
-    d = d or ""
-    out, i, n = [], 0, len(d)
-    cmd, argi = None, 0
-    while i < n:
-        ch = d[i]
-        if ch.isspace() or ch == ",":
-            i += 1
-            continue
-        if ch.isalpha() and ch not in "eE":
-            cmd, argi = ch.upper(), 0
-            out.append(ch)
-            i += 1
-            continue
-        if cmd == "A" and argi % 7 in (3, 4) and ch in "01":
-            out.append(ch)
-            argi += 1
-            i += 1
-            continue
-        m = _NUM_AT.match(d, i)
-        if not m:
-            i += 1
-            continue
-        out.append(m.group(0))
-        argi += 1
-        i = m.end()
-    return out
+    return safety.path_tokens(d or '')
 
 
 def parse_path(d):
@@ -304,17 +241,15 @@ def parse_path(d):
                     seg_list = []
                 cur = start
                 last_ctrl, last_cmd = None, "Z"
+                cmd = None
                 continue
         if cmd is None:
-            i += 1
-            continue
+            raise safety.SafetyError('path data without command')
         up = cmd.upper()
         rel = cmd.islower()
         need = ARGC[up]
         if i + need > len(tokens) or any(re.fullmatch(r"[A-Za-z]", tokens[j]) for j in range(i, i + need)):
-            # malformed: skip token
-            i += 1
-            continue
+            raise safety.SafetyError('short path command')
         ox, oy = cur if rel else (0.0, 0.0)
         if up == "M":
             x, y = num() + ox, num() + oy
@@ -374,8 +309,8 @@ def parse_path(d):
 
 def _arc_points(p0, p1, params, steps=24):
     rx, ry, phi_deg, fa, fs = params
-    if rx == 0 or ry == 0 or p0 == p1:
-        return [p0, p1]
+    if rx < 1e-100 or ry < 1e-100 or p0 == p1:
+        return [p0, p1]  # numerically degenerate radii are straight segments
     phi = math.radians(phi_deg)
     cp, sp = math.cos(phi), math.sin(phi)
     dx, dy = (p0[0] - p1[0]) / 2, (p0[1] - p1[1]) / 2

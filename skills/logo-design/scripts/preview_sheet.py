@@ -184,11 +184,10 @@ def shelf_block(items, refs):
 
 
 def refs_for_industry(industry, n):
-    with open(svglib.CATALOG_PATH, encoding="utf-8") as fh:
-        cat = json.load(fh)
+    cat = json.loads(svglib.safety.bounded_read(svglib.CATALOG_PATH))
     rows = [r for r in cat if r.get("industry") == industry and r.get("variant") == "main"]
     rows.sort(key=lambda r: (not r.get("exemplary"), r["file"]))
-    return [os.path.join(svglib.LIBRARY_SVG_DIR, r["file"]) for r in rows[:n]]
+    return [svglib.safety.asset_path(r['file'], svglib.LIBRARY_SVG_DIR) for r in rows[:n]]
 
 
 def main():
@@ -202,7 +201,13 @@ def main():
     ap.add_argument("--refs-industry", help="pull shelf references from the library by industry")
     ap.add_argument("--refs-count", type=int, default=11)
     ap.add_argument("--compare-only", action="store_true", help="only the side-by-side section")
+    ap.add_argument('--overwrite', action='store_true')
     a = ap.parse_args()
+    svglib.safety.jobs(len(a.files) + len(a.refs) + max(0, a.refs_count))
+    if not 0 <= a.refs_count <= svglib.safety.MAX_JOBS:
+        ap.error('refs-count outside job limits')
+    if a.brand_color is not None:
+        a.brand_color = svglib.safety.canonical_color(a.brand_color)
 
     items = []
     for i, p in enumerate(a.files):
@@ -240,10 +245,13 @@ def main():
     doc = (f"<!doctype html><html lang='en'><head><meta charset='utf-8'><title>Logo test — {html.escape(brand_name)}</title>"
            f"<meta name='viewport' content='width=device-width,initial-scale=1'><style>{CSS}</style></head>"
            f"<body>{''.join(body)}<script>{PIX_JS}</script></body></html>")
-    with open(a.out, "w", encoding="utf-8") as fh:
-        fh.write(doc)
+    svglib.safety.write_output(a.out, doc, a.overwrite, list(a.files) + refs)
     print(f"wrote {a.out}  ({len(items)} logo(s), {len(refs)} reference(s)) — open it in a browser")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (svglib.safety.SafetyError, RuntimeError, OSError) as exc:
+        print('error:', exc, file=sys.stderr)
+        sys.exit(1)

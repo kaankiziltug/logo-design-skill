@@ -160,5 +160,5 @@ Each record in `catalog.json`:
 | `mood`, `industry`, `exemplary`, `note` | tone, sector, teaching flag and why |
 
 To add logos: place SVGs in `assets/library/svg/`, append classification objects with the same keys to
-`classifications.json`, run `python3 scripts/build_catalog.py` (and `--check` to verify coverage). Only add marks you
+`classifications.json`, run `python3 scripts/build_catalog.py --overwrite` (and `--check` to verify coverage). Only add marks you
 have the right to redistribute for reference.

@@ -34,7 +34,7 @@ failures = []
 def run(name, args, expect=(), cwd=None):
     """Run a script; fail on non-zero exit, a traceback, or missing expected text/files."""
     env = {k: v for k, v in os.environ.items() if k not in ("PYTHONIOENCODING", "PYTHONUTF8")}
-    p = subprocess.run([sys.executable] + args, cwd=cwd or SKILL, env=env, capture_output=True)
+    p = subprocess.run([sys.executable] + args, cwd=cwd or SKILL, env=env, capture_output=True, timeout=180)
     out = (p.stdout + p.stderr).decode("utf-8", "replace")
     problems = []
     if p.returncode != 0:
