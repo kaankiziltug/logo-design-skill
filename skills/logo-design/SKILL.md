@@ -35,7 +35,7 @@ describe what the kit would contain.
 
 ## Tools in this skill
 
-All scripts are dependency-free Python 3 and live in the `scripts/` folder next to this SKILL.md (in Claude Code
+All scripts are dependency-free Python 3.9+ and live in the `scripts/` folder next to this SKILL.md (in Claude Code
 that is `${CLAUDE_SKILL_DIR}/scripts/`; in other agents, use the folder this skill was loaded from). Run them with
 `python3` and the full path, e.g.
 `python3 <skill-dir>/scripts/svg_audit.py logo.svg` (examples below write `scripts/…` for brevity).
@@ -48,9 +48,18 @@ On Windows, `python3` is often the Microsoft Store stub; use `python` (or `py -3
 | `svg_audit.py` | Check an SVG: live text, rasters, filters, colour count, gradients, strokes, near-miss angles, tiny details, centring, complexity vs. the library |
 | `preview_sheet.py` | HTML test sheet: size ladder, 16/32 px pixel test, backgrounds, one-colour, squint blur, mirror/rotate, favicon/app-icon/header/card contexts, side-by-side, shelf test vs. competitors |
 | `presentation_board.py` | Client presentation (brief, each concept with rationale + 6 **industry-specific** mockups — cup, packaging, payment card, README, terminal, signage…; comparison, recommendation) from a JSON spec (`templates/presentation-spec.example.json`); `--png-dir` exports every slide as PNG; `--list-mockups` |
-| `render_png.py` | Render SVG → transparent PNG at exact sizes (for looking at your work and for deliverables); screenshots HTML sheets/boards (Chrome); builds `favicon.ico`; `--which` lists renderers |
+| `render_png.py` | Render validated SVG → exact-size PNG; builds `favicon.ico`; `--which` lists renderers. Arbitrary HTML file screenshots are not supported |
 | `export_variants.py` | Black, white, brand-mono, square, favicon and app-icon SVGs; `--png` sizes; `--web-icons` = favicon.ico + PNG icon set + webmanifest + `<head>` snippet; `--favicon-source` for a simplified small-size drawing |
 | `build_catalog.py` | Maintainers only: rebuild the library catalog |
+
+**Safety contract:** inputs are bounded static SVG, never active documents. Presentation JSON assets stay
+inside the resolved spec directory unless the owner explicitly passes CLI `--asset-root`. Text is escaped and
+colours are strictly canonicalized. Outputs default to no-clobber; use `--overwrite` for regular-file reruns,
+never symlinks or aliases. Export `--name` is a portable basename. Requested raster failures exit nonzero.
+Board `--png-dir` uses only freshly generated in-memory slide documents with restrictive CSP and a private
+browser profile, without sandbox-disabling flags. Read `references/security.md` for exact SVG/CSS, byte,
+depth, token, reference, raster, job and timeout limits. These are not a host/process sandbox, a generic HTML
+sanitizer or hard resource limits for optional in-process CairoSVG/Pillow. Work in owner-controlled directories.
 
 **Look at your work.** Drawing in SVG code is drawing blind. After writing or changing a logo, render it and look:
 `python3 scripts/render_png.py concept-a.svg concept-b.svg --out-dir renders --size 512`, then open the PNGs with

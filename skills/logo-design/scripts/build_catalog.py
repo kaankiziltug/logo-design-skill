@@ -148,27 +148,41 @@ function render(){
     &&(!i||d.industry===i)&&(!f||d.primary_family===f)&&(!$('ex').checked||d.exemplary)&&(!$('icon').checked||d.aspect_class==='square')
     &&(!q||(d.file+' '+(d.subject||'')+' '+(d.note||'')).toLowerCase().includes(q)));
   $('count').textContent = rows.length + ' / ' + DATA.length;
-  $('grid').innerHTML = rows.slice(0,600).map(d=>`<div class="card"><div class="thumb"><img loading="lazy" src="svg/${d.file}" alt="${d.brand}"></div>
-   <div class="name">${d.exemplary?'<span class="star">★</span> ':''}${d.file}</div>
-   <div class="meta">${d.mark_type}${d.symbol_type?' · '+d.symbol_type:''} · ${d.industry} · ${d.n_colors} col</div>
-   <div class="meta">${(d.techniques||[]).join(', ')}</div>${d.note?`<div class="note">${d.note}</div>`:''}</div>`).join('');
+  $('grid').replaceChildren();
+  rows.slice(0,600).forEach(d=>{
+    const card=document.createElement('div');card.className='card';
+    const thumb=document.createElement('div');thumb.className='thumb';
+    const image=document.createElement('img');image.loading='lazy';image.alt=String(d.brand||'');
+    image.src='svg/'+encodeURIComponent(d.file);thumb.appendChild(image);card.appendChild(thumb);
+    const add=(cls,text)=>{const node=document.createElement('div');node.className=cls;node.textContent=text;card.appendChild(node)};
+    add('name',(d.exemplary?'★ ':'')+d.file);
+    add('meta',d.mark_type+(d.symbol_type?' · '+d.symbol_type:'')+' · '+d.industry+' · '+d.n_colors+' col');
+    add('meta',(d.techniques||[]).join(', '));if(d.note)add('note',d.note);
+    $('grid').appendChild(card);
+  });
 }
 ['q','type','tech','geo','ind','fam','ex','icon'].forEach(id=>$(id).addEventListener('input',render)); render();
 </script></body></html>
 """
 
 
+def gallery(records):
+    for record in records:
+        svglib.safety.portable_name(record['file'])
+    return GALLERY_TEMPLATE.replace('__DATA__', svglib.safety.safe_json(records))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="only verify classification coverage")
+    ap.add_argument('--overwrite', action='store_true')
     args = ap.parse_args()
 
     files = sorted(f for f in os.listdir(svglib.LIBRARY_SVG_DIR) if f.lower().endswith(".svg"))
     names = {f[:-4] for f in files}
     classes = {}
     if os.path.exists(CLASS_PATH):
-        with open(CLASS_PATH, encoding="utf-8") as fh:
-            classes = {c["file"]: c for c in json.load(fh)}
+        classes = {c['file']: c for c in json.loads(svglib.safety.bounded_read(CLASS_PATH))}
     missing = [f for f in files if f not in classes]
     if args.check:
         print(f"{len(files)} SVGs, {len(classes)} classifications, {len(missing)} missing")
@@ -178,11 +192,7 @@ def main():
 
     records = []
     for f in files:
-        try:
-            rec = analyse(os.path.join(svglib.LIBRARY_SVG_DIR, f), names)
-        except Exception as exc:  # keep going; report broken files
-            print("  ! could not parse", f, exc, file=sys.stderr)
-            continue
+        rec = analyse(os.path.join(svglib.LIBRARY_SVG_DIR, f), names)
         c = classes.get(f, {})
         for key in ("mark_type", "symbol_type", "subject", "geometry", "techniques", "type_style", "case",
                     "mood", "industry", "exemplary", "note"):
@@ -193,16 +203,16 @@ def main():
         rec["exemplary"] = bool(rec["exemplary"])
         records.append(rec)
 
-    with open(svglib.CATALOG_PATH, "w", encoding="utf-8") as fh:
-        json.dump(records, fh, ensure_ascii=False, separators=(",", ":"))
     stats = build_stats(records)
-    with open(svglib.STATS_PATH, "w", encoding="utf-8") as fh:
-        json.dump(stats, fh, ensure_ascii=False, indent=1)
     slim = [{k: r[k] for k in ("file", "brand", "mark_type", "symbol_type", "subject", "techniques", "geometry",
                                "industry", "exemplary", "note", "n_colors", "primary_family", "aspect_class")}
             for r in records]
-    with open(GALLERY_PATH, "w", encoding="utf-8") as fh:
-        fh.write(GALLERY_TEMPLATE.replace("__DATA__", json.dumps(slim, ensure_ascii=False)))
+    outputs = [svglib.CATALOG_PATH, svglib.STATS_PATH, GALLERY_PATH]
+    inputs = [CLASS_PATH] + [os.path.join(svglib.LIBRARY_SVG_DIR, f) for f in files]
+    svglib.safety.plan_outputs(outputs, args.overwrite, inputs)
+    contents = [json.dumps(records, ensure_ascii=False, separators=(',', ':')), json.dumps(stats, ensure_ascii=False, indent=1), gallery(slim)]
+    for path, content in zip(outputs, contents):
+        svglib.safety.write_output(path, content, args.overwrite, inputs)
     print(f"catalog: {len(records)} records -> {svglib.CATALOG_PATH}")
     print(f"stats   -> {svglib.STATS_PATH}")
     print(f"gallery -> {GALLERY_PATH}")

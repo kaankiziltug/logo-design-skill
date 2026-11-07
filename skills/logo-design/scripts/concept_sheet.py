@@ -28,18 +28,29 @@ import svglib  # noqa: E402
 
 def embed(path, key, x, y, w, h):
     """Nested <svg> that fits the file into the box; ids are prefixed so several files can coexist."""
-    raw = open(path, encoding="utf-8", errors="ignore").read()
-    raw = re.sub(r"<\?xml[^>]*\?>|<!DOCTYPE[^>]*>", "", raw, flags=re.I)
-    raw = re.sub(r'\bid="([^"]+)"', lambda m: f'id="{key}-{m.group(1)}"', raw)
-    raw = re.sub(r"url\(#([^)]+)\)", lambda m: f"url(#{key}-{m.group(1)})", raw)
-    raw = re.sub(r'(xlink:href|href)="#([^"]+)"', lambda m: f'{m.group(1)}="#{key}-{m.group(2)}"', raw)
-    m = re.search(r"<svg\b[^>]*>", raw)
-    tag = m.group(0)
-    root_vb = svglib.view_box(svglib.load_svg(path)[1])
-    vb = f' viewBox="{root_vb[0]:g} {root_vb[1]:g} {root_vb[2]:g} {root_vb[3]:g}"' if root_vb else ""
-    new_tag = re.sub(r'\s(width|height|x|y|viewBox|preserveAspectRatio)\s*=\s*"[^"]*"', "", tag)
-    new_tag = new_tag[:-1].rstrip("/") + f'{vb} x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" preserveAspectRatio="xMidYMid meet">'
-    return raw.replace(tag, new_tag, 1)
+    raw, root = svglib.load_svg(path)
+    ids = {el.get('id') for el in root.iter() if el.get('id')}
+    for el in root.iter():
+        if el.get('id'):
+            el.set('id', key + '-' + el.get('id'))
+        for attr, value in list(el.attrib.items()):
+            value = re.sub(r'url\(#([^)]+)\)', lambda m: 'url(#' + key + '-' + m.group(1) + ')', value)
+            if attr in ('href', '{http://www.w3.org/1999/xlink}href') and value.startswith('#'):
+                value = '#' + key + '-' + value[1:]
+            el.set(attr, value)
+        if svglib.local(el.tag) == 'style':
+            rules = []
+            for selector, body in svglib.safety.stylesheet_rules(el.text or ''):
+                selector = re.sub(r'#([A-Za-z_][A-Za-z0-9_.:-]*)', lambda m: '#' + key + '-' + m.group(1) if m.group(1) in ids else m.group(0), selector)
+                body = re.sub(r'url\(#([^)]+)\)', lambda m: 'url(#' + key + '-' + m.group(1) + ')', body)
+                rules.append(selector + '{' + body + '}')
+            el.text = ''.join(rules)
+    vb = svglib.view_box(root)
+    if vb:
+        root.set('viewBox', ' '.join(str(n) for n in vb))
+    for attr, value in {'x': x, 'y': y, 'width': w, 'height': h, 'preserveAspectRatio': 'xMidYMid meet'}.items():
+        root.set(attr, str(value))
+    return svglib.safety.serialize(root)
 
 
 def wrap(text, limit):
@@ -66,7 +77,11 @@ def main():
     ap.add_argument("--greyscale", action="store_true", help="show everything in greyscale (first-round rule)")
     ap.add_argument("--width", type=int, default=1600)
     ap.add_argument("-o", "--out", default="concepts.png", help="output .png (an .svg is written next to it)")
+    ap.add_argument('--overwrite', action='store_true')
     a = ap.parse_args()
+    svglib.safety.jobs(len(a.files) + len(a.lockups))
+    if a.width < 600:
+        ap.error('width must be at least 600')
 
     n = len(a.files)
     cols = min(n, 3)
@@ -131,16 +146,19 @@ def main():
            f'width="{W}" height="{H:g}" viewBox="0 0 {W} {H:g}">{filt}{"".join(parts)}</svg>\n')
     base = os.path.splitext(a.out)[0]
     svg_path = base + ".svg"
-    with open(svg_path, "w", encoding="utf-8") as fh:
-        fh.write(doc)
-    print("wrote", svg_path)
-    png_path = base + ".png"
-    used = render_png.render(svg_path, png_path, W, int(round(H)))
-    if used:
-        print(f"wrote {png_path} via {used} — view it, show it to the user, then stop and ask")
-    else:
-        print("PNG skipped (no renderer; see render_png.py --which) — show the SVG instead")
+    svglib.safety.dimensions(W, int(round(H)))
+    svglib.safety.parse_svg(doc)
+    png_path = base + '.png'
+    svglib.safety.plan_outputs([svg_path, png_path], a.overwrite, list(a.files) + a.lockups)
+    svglib.safety.write_output(svg_path, doc, a.overwrite, list(a.files) + a.lockups)
+    print('wrote', svg_path)
+    used = render_png.render(svg_path, png_path, W, int(round(H)), overwrite=a.overwrite)
+    print(f'wrote {png_path} via {used}')
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (svglib.safety.SafetyError, RuntimeError, OSError) as exc:
+        print('error:', exc, file=sys.stderr)
+        sys.exit(1)

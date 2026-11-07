@@ -149,9 +149,8 @@ img.g{filter:grayscale(1)}img.w{filter:brightness(0) invert(1)}img.k{filter:brig
 """
 
 
-def uri(path, base):
-    p = path if os.path.isabs(path) else os.path.join(base, path)
-    return svglib.svg_data_uri(p)
+def uri(path, base, asset_root=None):
+    return svglib.svg_data_uri(svglib.safety.asset_path(path, base, asset_root))
 
 
 def text_on(bg):
@@ -276,6 +275,8 @@ def main():
     ap.add_argument("-o", "--out", default="presentation.html")
     ap.add_argument("--list-mockups", action="store_true")
     ap.add_argument("--png-dir", help="also export every slide as slide-NN.png (needs Chrome/Chromium)")
+    ap.add_argument('--asset-root', help='explicit allowed root for spec-selected SVG assets')
+    ap.add_argument('--overwrite', action='store_true')
     a = ap.parse_args()
     if a.list_mockups:
         print("mockups:", ", ".join(ALL_MOCKUPS))
@@ -285,16 +286,25 @@ def main():
         return
     if not a.spec:
         ap.error("spec.json required")
-    with open(a.spec, encoding="utf-8") as fh:
-        spec = json.load(fh)
-    base = os.path.dirname(os.path.abspath(a.spec))
+    spec = svglib.safety.validate_spec(json.loads(svglib.safety.bounded_read(a.spec)))
+    base = os.path.dirname(os.path.realpath(a.spec))
+    asset_root = os.path.realpath(a.asset_root or base)
+    inputs = [a.spec]
+    for concept in spec.get('concepts', []):
+        for key in ('symbol', 'lockup', 'avatar', 'stacked', 'symbol_on_dark', 'symbol_on_tile', 'lockup_on_dark', 'lockup_on_tile', 'stacked_on_dark', 'stacked_on_tile'):
+            if concept.get(key):
+                p = svglib.safety.asset_path(concept[key], base, asset_root)
+                svglib.load_svg(p)
+                inputs.append(p)
+    def uri(path, base):
+        return svglib.svg_data_uri(svglib.safety.asset_path(path, base, asset_root))
     brand = spec.get("brand", "Brand")
     color = spec.get("brand_color", "#161616")
     grey = spec.get("greyscale", True)
     final = spec.get("final", False)
     cls = "g" if grey else ""
     tile = "#161616" if grey else (spec.get("tile_color") or color)
-    date = spec.get("date") or datetime.date.today().isoformat()
+    date = html.escape(spec.get("date") or datetime.date.today().isoformat())
     designer = spec.get("designer", "")
     concepts = spec.get("concepts", [])
     ind = str(spec.get("industry", "")).lower()
@@ -319,7 +329,7 @@ def main():
         else f"Logo design · round {spec.get('round', 1)}"
     note = ("Concepts are shown in greyscale so the conversation stays on form and idea; colour follows once a "
             "direction is chosen." if grey and not final else "")
-    slides.append(f"""<section class="slide"><div class="kicker">{kicker}</div>
+    slides.append(f"""<section class="slide"><div class="kicker">{html.escape(kicker)}</div>
 <h1>{html.escape(brand)}</h1><p class="idea muted">{html.escape(deck_title.capitalize())}{(' · ' + html.escape(designer)) if designer else ''} · {date}</p>
 {cover_mark}<p class="muted" style="max-width:720px;margin-top:120px">{note}</p>{foot(1)}</section>""")
     adj = "".join(f"<span>{html.escape(x)}</span>" for x in spec.get("adjectives", []))
@@ -351,8 +361,8 @@ def main():
                 if src:
                     dark[k] = uri(src, base)
         items.append((c, sym, lock))
-        label = spec.get("label") or ((custom_title.capitalize() if custom_title else "Final design") if final
-                                      else f"Concept {chr(65 + i)}")
+        label = html.escape(spec.get("label") or ((custom_title.capitalize() if custom_title else "Final design") if final
+                                      else f"Concept {chr(65 + i)}"))
         rat = "".join(f"<li>{html.escape(r)}</li>" for r in c.get("rationale", []))
         sizes = "".join(f'<div><img class="{cls}" src="{av}" style="height:{s}px">{s}px</div>' for s in (16, 24, 32, 64))
         slides.append(f"""<section class="slide"><div class="kicker">{label}</div><h2>{html.escape(c.get('name', ''))}</h2>
@@ -382,28 +392,22 @@ def main():
 <ul class="rat" style="margin-top:30px">{''.join(f'<li>{html.escape(s)}</li>' for s in steps)}</ul>{foot(len(slides) + 1)}</section>""")
     doc = (f"<!doctype html><html lang='en'><head><meta charset='utf-8'><title>{html.escape(brand)} — {html.escape(deck_title)}</title>"
            f"<style>{CSS}</style></head><body>{''.join(slides)}</body></html>")
-    with open(a.out, "w", encoding="utf-8") as fh:
-        fh.write(doc)
+    png_paths = [os.path.join(a.png_dir, f'slide-{i:02d}.png') for i in range(1, len(slides) + 1)] if a.png_dir else []
+    svglib.safety.plan_outputs([a.out] + png_paths, a.overwrite, inputs)
+    svglib.safety.write_output(a.out, doc, a.overwrite, inputs)
     print(f"wrote {a.out} ({len(slides)} slides; mockups: {', '.join(mockups)})")
     if a.png_dir:
-        import tempfile
         import render_png
-        os.makedirs(a.png_dir, exist_ok=True)
-        solo_css = CSS + "body{background:#fff}.slide{margin:0;box-shadow:none;min-height:800px}"
-        for i, sl in enumerate(slides, 1):
-            with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as fh:
-                fh.write(f"<!doctype html><html><head><meta charset='utf-8'><style>{solo_css}</style></head><body>{sl}</body></html>")
-                tmp_html = fh.name
-            out = os.path.join(a.png_dir, f"slide-{i:02d}.png")
-            try:
-                render_png.screenshot_html(tmp_html, out, 1280, 800)
-                print("wrote", out)
-            except Exception as exc:
-                print(f"slide PNG export failed ({exc}); open the HTML instead")
-                break
-            finally:
-                os.unlink(tmp_html)
+        solo_css = CSS + 'body{background:#fff}.slide{margin:0;box-shadow:none;min-height:800px}'
+        for sl, out in zip(slides, png_paths):
+            generated = f"<!doctype html><html><head><meta charset='utf-8'><style>{solo_css}</style></head><body>{sl}</body></html>"
+            render_png._screenshot_generated(generated, out, 1280, 800, a.overwrite)
+            print('wrote', out)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (svglib.safety.SafetyError, RuntimeError, OSError) as exc:
+        print('error:', exc, file=sys.stderr)
+        sys.exit(1)

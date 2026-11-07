@@ -31,8 +31,8 @@ def load_stats():
     try:
         with open(svglib.STATS_PATH, encoding="utf-8") as fh:
             return json.load(fh)
-    except OSError:
-        return None
+    except FileNotFoundError:
+        return None  # advisory library comparisons are optional when stats are not installed
 
 
 def audit(path, bg=None):
@@ -94,6 +94,8 @@ def audit(path, bg=None):
         add("INFO", "transparency", "Uses transparency/opacity. Overlap effects need a solid-colour fallback for print and embroidery.")
     # fake knockouts: a white shape painted on top of (inside the box of) an earlier coloured shape
     boxes = svglib.painted_shape_boxes(root)
+    if len(boxes) * (len(boxes) - 1) // 2 > svglib.safety.MAX_AUDIT_PAIRS:
+        raise svglib.safety.SafetyError('audit pair-work limit exceeded')
     knock, on_tile = 0, 0
     canvas_area = (vb[2] * vb[3]) if vb else None
     for i, (_, bb_w, fill_w) in enumerate(boxes):
@@ -239,6 +241,9 @@ def main():
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--bg", help="background colour to test contrast against, e.g. '#ffffff'")
     a = ap.parse_args()
+    svglib.safety.jobs(len(a.files))
+    if a.bg is not None:
+        a.bg = svglib.safety.canonical_color(a.bg)
     results, rc = [], 0
     for p in a.files:
         try:
