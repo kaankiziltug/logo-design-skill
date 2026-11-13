@@ -75,20 +75,31 @@ def _tokens(text):
     return out
 
 
+def text_units(s):
+    """Approximate rendered width in half-em units: CJK = 2, Latin = 1."""
+    return sum(2 if _is_cjk(ch) else 1 for ch in s)
+
+
+def wrap_px(text, max_units):
+    """Wrap so no line exceeds max_units half-em units (the SVG half-em = font-size/2)."""
+    return wrap(text, max_units)
+
+
 def wrap(text, limit):
-    """Wrap by rendered width. CJK counts as 1 unit, Latin words break on spaces."""
+    """Wrap by rendered width. CJK counts as 2 units, Latin as 1 (half-em)."""
     if limit <= 0:
         return [text]
     lines, line, line_len = [], "", 0
     for tok in _tokens(text):
         # a space is needed before a Latin token if the line already has content
         need_space = 1 if (line and not _is_cjk(tok[0]) and not _is_cjk(line[-1])) else 0
-        if line_len + len(tok) + need_space > limit and line:
+        tok_w = text_units(tok)
+        if line_len + tok_w + need_space > limit and line:
             lines.append(line)
             line, line_len = "", 0
             need_space = 0
         line += (" " if need_space else "") + tok
-        line_len += len(tok) + need_space
+        line_len += tok_w + need_space
     if line:
         lines.append(line)
     return lines
@@ -125,7 +136,16 @@ def main():
                     ratios.append(vb[2] / vb[3])
         # wide lockups fit a short slot; squarish ones (emblems, stacked lockups) need more height
         lock_h = 120 if not ratios or min(ratios) >= 2.2 else (170 if min(ratios) >= 1.4 else 210)
-    card_h = 40 + art_h + (lock_h + 24 if has_lock else 0) + 90 + 150 + (30 if a.recommend else 0) + 20
+    # notes wrap at inner_w/9.6; size the card to the tallest note instead of clipping it
+    _inner_w_probe = card_w - 60
+    _note_lines = 0
+    for i in range(n):
+        _note = a.notes[i] if i < len(a.notes) else ""
+        if _note:
+            _note_lines = max(_note_lines, len(wrap(_note, int(_inner_w_probe / 9.5))))
+    # 26px leading per note line; guarantee at least one line of room
+    note_h = max(1, _note_lines) * 26 + 8
+    card_h = 40 + art_h + (lock_h + 24 if has_lock else 0) + 90 + 150 + (30 if a.recommend else 0) + note_h + 20
     header = 150
     H = header + rows * card_h + (rows - 1) * gap + pad
     parts = []
@@ -170,9 +190,8 @@ def main():
                          f'letter-spacing="1.5">RECOMMENDED</text>')
             yy += 28
         note = a.notes[i] if i < len(a.notes) else ""
-        # 19px font, 26px leading; keep the note inside the card instead of clipping
-        max_note_lines = max(1, int((H - yy - 34 - 12) // 26))
-        for k, line in enumerate(wrap(note, int(inner_w / 9.6))[:max_note_lines]):
+        # card_h already reserves exactly len(wrap(note)) lines, so draw them all
+        for k, line in enumerate(wrap(note, int(inner_w / 9.5))):
             parts.append(f'<text x="{inner_x}" y="{yy + 34 + k * 26}" {font} font-size="19" fill="#555">{html.escape(line)}</text>')
     doc = (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
            f'width="{W}" height="{H:g}" viewBox="0 0 {W} {H:g}">{filt}{"".join(parts)}</svg>\n')
