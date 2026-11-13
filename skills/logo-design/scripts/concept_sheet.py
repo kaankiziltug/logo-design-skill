@@ -42,13 +42,53 @@ def embed(path, key, x, y, w, h):
     return raw.replace(tag, new_tag, 1)
 
 
+def _is_cjk(ch):
+    """True for CJK ideographs, kana, hangul and full-width punctuation."""
+    cp = ord(ch)
+    return (
+        0x3040 <= cp <= 0x30FF      # kana
+        or 0x3400 <= cp <= 0x4DBF   # CJK ext A
+        or 0x4E00 <= cp <= 0x9FFF   # CJK unified
+        or 0xF900 <= cp <= 0xFAFF   # CJK compat
+        or 0xFF00 <= cp <= 0xFFEF   # full-width forms
+        or 0xAC00 <= cp <= 0xD7AF   # hangul
+    )
+
+
+def _tokens(text):
+    """Split into wrappable tokens: CJK chars stand alone, Latin words stay whole."""
+    out, buf = [], ""
+    for ch in text:
+        if _is_cjk(ch):
+            if buf:
+                out.append(buf)
+                buf = ""
+            out.append(ch)
+        elif ch.isspace():
+            if buf:
+                out.append(buf)
+                buf = ""
+        else:
+            buf += ch
+    if buf:
+        out.append(buf)
+    return out
+
+
 def wrap(text, limit):
-    words, lines, line = text.split(), [], ""
-    for w in words:
-        if len(line) + len(w) + 1 > limit and line:
+    """Wrap by rendered width. CJK counts as 1 unit, Latin words break on spaces."""
+    if limit <= 0:
+        return [text]
+    lines, line, line_len = [], "", 0
+    for tok in _tokens(text):
+        # a space is needed before a Latin token if the line already has content
+        need_space = 1 if (line and not _is_cjk(tok[0]) and not _is_cjk(line[-1])) else 0
+        if line_len + len(tok) + need_space > limit and line:
             lines.append(line)
-            line = ""
-        line += (" " if line else "") + w
+            line, line_len = "", 0
+            need_space = 0
+        line += (" " if need_space else "") + tok
+        line_len += len(tok) + need_space
     if line:
         lines.append(line)
     return lines
@@ -117,7 +157,12 @@ def main():
             parts.append(f'<text x="{sx + s / 2:g}" y="{yy + 84}" {font} font-size="12" fill="#8a8a8a" text-anchor="middle">{s}px</text>')
             sx += s + 26
         yy += 120
-        label = f"{chr(65 + i)} · {a.names[i] if i < len(a.names) else os.path.splitext(os.path.basename(f))[0]}"
+        raw = a.names[i] if i < len(a.names) else os.path.splitext(os.path.basename(f))[0]
+        # avoid duplicating an existing "A ·" / "A —" / "A:" prefix
+        if raw.lstrip()[:1] == chr(65 + i) and raw.lstrip()[1:2] in (" ", "·", "—", "-", ":"):
+            label = raw.lstrip()[1:].lstrip(" ·—:-")
+        else:
+            label = f"{chr(65 + i)} · {raw}"
         parts.append(f'<text x="{inner_x}" y="{yy}" {font} font-size="26" font-weight="700" '
                      f'fill="{"#161616"}">{html.escape(label)}</text>')
         if rec:
@@ -125,7 +170,9 @@ def main():
                          f'letter-spacing="1.5">RECOMMENDED</text>')
             yy += 28
         note = a.notes[i] if i < len(a.notes) else ""
-        for k, line in enumerate(wrap(note, int(inner_w / 9.6))[:3]):
+        # 19px font, 26px leading; keep the note inside the card instead of clipping
+        max_note_lines = max(1, int((H - yy - 34 - 12) // 26))
+        for k, line in enumerate(wrap(note, int(inner_w / 9.6))[:max_note_lines]):
             parts.append(f'<text x="{inner_x}" y="{yy + 34 + k * 26}" {font} font-size="19" fill="#555">{html.escape(line)}</text>')
     doc = (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
            f'width="{W}" height="{H:g}" viewBox="0 0 {W} {H:g}">{filt}{"".join(parts)}</svg>\n')
